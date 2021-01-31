@@ -20,7 +20,6 @@ top = subreddit.top (limit = 5)
 
 print(subreddit.display_name)  # output: redditdev
 print(subreddit.title)         # output: reddit development
-print(subreddit.description) 
 
 #for sumbission in top:
 #    print(submission)
