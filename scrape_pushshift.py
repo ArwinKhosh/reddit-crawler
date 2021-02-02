@@ -3,9 +3,16 @@ import json
 import re
 import time
 
+# TODO
+# Understant why changing params to asc makes it work, desc just do one loop
+# Need to use id, not time, when fetching new interval of comments.
+# Ids are uniqe and is just an incrementing int in base 36. but comments
+# can be posted at the same time so not good. 
+
 # Docs: 
 # https://www.reddit.com/r/pushshift/comments/8m50un/how_does_pushshift_update_submissions_and/
-#
+# https://github.com/pushshift/api  # This seems to be not up to date, but useful
+# https://www.osrsbox.com/blog/2019/03/18/watercooler-scraping-an-entire-subreddit-2007scape//
 
 
 PUSHSHIFT_REDDIT_URL = "http://api.pushshift.io/reddit"
@@ -14,8 +21,9 @@ def fetchObjects(**kwargs):
     # Default paramaters for API query
     params = {
         "sort_type":"created_utc",
-        "sort":"ascs",
-        "size":1000
+        "sort":"asc", # desc gives news first
+        "size":1000, # apperantly the max size has been limited to 100 past year
+        "fields": ["created_utc","body","id","score","subreddit"] 
         }
 
     # Add additional paramters based on function arguments
@@ -39,7 +47,7 @@ def fetchObjects(**kwargs):
     if r.status_code == 200:
         response = json.loads(r.text)
         data = response['data']
-        sorted_data_by_id = sorted(data, key=lambda x: int(x['id'],36))
+        sorted_data_by_id = sorted(data, key=lambda x: int(x['id'],36)) # this default to asc order. SO oldest post first
         return sorted_data_by_id
 
 def extract_reddit_data(**kwargs):
@@ -58,10 +66,11 @@ def extract_reddit_data(**kwargs):
     # While loop for recursive function
     while 1:
         nothing_processed = True
-        # Call the recursive function
+        # Call the recursive function. Because of sorted in other function date
+        # is oldest to newest
         objects = fetchObjects(**kwargs,after=oldest_created_utc)
         
-        # Loop the returned data, ordered by date
+        # Loop the returned data (max 100), ordered by date (new to old)
         for object in objects:
             id = int(object['id'],36)
             if id > max_id:
@@ -74,6 +83,8 @@ def extract_reddit_data(**kwargs):
         
         # Exit if nothing happened
         if nothing_processed: return
+        # The newest time of the returned results will for the next request
+        # be used as the input for request. 
         oldest_created_utc -= 1
 
         # Sleep a little before the next recursive function call
