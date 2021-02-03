@@ -106,6 +106,8 @@ def fetchObjects(**kwargs):
         data = response['data']
         sorted_data_by_id = sorted(data, key=lambda x: int(x['id'],36)) # this default to asc order. So oldest post first
         return sorted_data_by_id
+    if r.status_code == 404:
+        print('404')
 
 def extract_reddit_data(**kwargs):
     # Speficify the start timestamp
@@ -172,18 +174,6 @@ def extract_reddit_data(**kwargs):
                             file.close()
                             file = open(f"data/comments_by_date/{created_utc_date}.json","a")
 
-                        elif created_utc_date in days_exist:
-                            file.close() 
-
-                            oldest_created_utc_date = epoch_to_gmt(oldest_created_utc,1)
-                            while oldest_created_utc_date not in days_exist:
-                                file = open(f"data/comments_by_date/{oldest_created_utc_date}.json","a")
-                                oldest_created_utc = gmt_to_epoch(oldest_created_utc_date)
-                                if created_utc > oldest_created_utc:
-                                    file.close() 
-
-                            oldest_created_utc = gmt_to_epoch(epoch_to_gmt(oldest_created_utc,1))
-                            break
                     
 
                     # Necessary to request newer comments
@@ -205,7 +195,7 @@ def extract_reddit_data(**kwargs):
 # Start program by calling function with:
 # 1) Subreddit specified
 # 2) The type of data required (comment or submission)
-extract_reddit_data(subreddit="debian",type="comment")
+extract_reddit_data(subreddit="europe",type="comment")
 
 #print(gmt_to_epoch("28-01-2021", 0, 0, 0, 1, -1))
 
