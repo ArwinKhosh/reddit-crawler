@@ -157,29 +157,38 @@ def extract_reddit_data(**kwargs):
                 # This is really just set odlest time and close/open new file. 
                 if created_utc > oldest_created_utc:
 
-                    # Necessary to request newer comments
-                    oldest_created_utc = created_utc
-
 
                     # Convert Epoch time to human readable date
                     oldest_created_utc_date = epoch_to_gmt(oldest_created_utc)
                     created_utc_date        = epoch_to_gmt(created_utc)
                     
-
-                    if oldest_created_utc_date != created_utc_date:
-                        # Must create a better increment function instead of this.
-                        oldest_created_utc = gmt_to_epoch(epoch_to_gmt(oldest_created_utc, 1))
-                        break
-
                         
                     # Check if date of new data has passed midnight.
                     # And that new date isn't already saved.  
                     # If yes, create new file with data in name. 
-                    if (created_utc_date != oldest_created_utc_date and  
-                        created_utc_date not in days_exist):
-                        file.close()
-                        file = open(f"data/comments_by_date/{created_utc_date}.json","a")
+                    if created_utc_date != oldest_created_utc_date:   
 
+                        if created_utc_date not in days_exist:
+                            file.close()
+                            file = open(f"data/comments_by_date/{created_utc_date}.json","a")
+
+                        elif created_utc_date in days_exist:
+                            file.close() 
+
+                            oldest_created_utc_date = epoch_to_gmt(oldest_created_utc,1)
+                            while oldest_created_utc_date not in days_exist:
+                                file = open(f"data/comments_by_date/{oldest_created_utc_date}.json","a")
+                                oldest_created_utc = gmt_to_epoch(oldest_created_utc_date)
+                                if created_utc > oldest_created_utc:
+                                    file.close() 
+
+                            oldest_created_utc = gmt_to_epoch(epoch_to_gmt(oldest_created_utc,1))
+                            break
+                    
+
+                    # Necessary to request newer comments
+                    oldest_created_utc = created_utc       
+                
                 # Output JSON data to the opened file.
                 print(json.dumps(object,sort_keys=True,ensure_ascii=True),file=file)
 
@@ -188,7 +197,7 @@ def extract_reddit_data(**kwargs):
         if nothing_processed: return
         # The newest time of the returned results will for the next request
         # be used as the input for request. 
-        oldest_created_utc -= 1
+        # oldest_created_utc -= 1
 
         # Sleep a little before the next recursive function call
         time.sleep(.5)
