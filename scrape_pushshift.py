@@ -31,7 +31,9 @@ def increment_time(epoch_time, add_day = 0, add_hour = 0, add_min = 0, add_sec =
     return epoch_time_add
 
 
-def epoch_to_gmt(epoch_time):
+def epoch_to_gmt(epoch_time, add_day = 0, add_sec = 0 ):
+
+    epoch_time = epoch_time + add_day*24*60*60 + add_sec
 
     gmt_date = time.strftime('%d-%m-%Y', time.gmtime(epoch_time))
 
@@ -78,7 +80,7 @@ def fetchObjects(**kwargs):
         "sort_type":"created_utc",
         "sort":"asc", # desc gives news first
         "size":100, # apperantly the max size has been limited to 100 past year
-        "fields": ["created_utc","id"] #, "body", "subreddit", "score"] 
+        "fields": ["created_utc","id", "body", "subreddit", "score"] 
         }
 
     # Add additional paramters based on function arguments
@@ -149,15 +151,27 @@ def extract_reddit_data(**kwargs):
                 created_utc = object['created_utc']
                 max_id = id
 
+
                 # This line is confusing. What if two posts have same timestamp? 
                 # Maybe doesn't matter. THey are being saved by ID anyways.
                 # This is really just set odlest time and close/open new file. 
                 if created_utc > oldest_created_utc:
 
-                    # Convert Epoch time to human readable date
-                    oldest_created_utc_date =time.strftime('%d-%m-%Y', time.gmtime(oldest_created_utc))
-                    created_utc_date = time.strftime('%d-%m-%Y', time.gmtime(created_utc))
+                    # Necessary to request newer comments
+                    oldest_created_utc = created_utc
 
+
+                    # Convert Epoch time to human readable date
+                    oldest_created_utc_date = epoch_to_gmt(oldest_created_utc)
+                    created_utc_date        = epoch_to_gmt(created_utc)
+                    
+
+                    if oldest_created_utc_date != created_utc_date:
+                        # Must create a better increment function instead of this.
+                        oldest_created_utc = gmt_to_epoch(epoch_to_gmt(oldest_created_utc, 1))
+                        break
+
+                        
                     # Check if date of new data has passed midnight.
                     # And that new date isn't already saved.  
                     # If yes, create new file with data in name. 
@@ -165,14 +179,6 @@ def extract_reddit_data(**kwargs):
                         created_utc_date not in days_exist):
                         file.close()
                         file = open(f"data/comments_by_date/{created_utc_date}.json","a")
-                    elif (created_utc_date != oldest_created_utc_date and  
-                          exist_date(created_utc_date)):
-                          date_exists = [int(item) for item in created_utc_date.split('-')]
-                          timestamp   = datetime.datetime(date_exists[2], \
-                              date_exists[1], date_exists[0] + 1,0,0).timestamp()
-                          oldest_created_utc = int(timestamp) - 1
-                    else:
-                        oldest_created_utc = created_utc
 
                 # Output JSON data to the opened file.
                 print(json.dumps(object,sort_keys=True,ensure_ascii=True),file=file)
