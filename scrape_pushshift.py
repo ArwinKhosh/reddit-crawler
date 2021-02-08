@@ -1,18 +1,20 @@
 import requests
 import json
-import os
 import time
-import datetime
-import calendar
 
-# TODO
+# Utilityy functions
+from common import util
+
+
+
+# TODO:
 # Understant why changing params to asc makes it work, desc just do one loop
 # I Fucked up! e.g a is b checks if their ids are the same. Need to go through
 # and fix where I use that. DONE! All good
 # Ids are uniqe and is just an incrementing int in base 36. but comments
 # can be posted at the same time so not good. 
 
-# Docs: 
+#* Docs: 
 # https://www.reddit.com/r/pushshift/comments/8m50un/how_does_pushshift_update_submissions_and/
 # https://github.com/pushshift/api  # This seems to be not up to date, but useful
 # https://www.osrsbox.com/blog/2019/03/18/watercooler-scraping-an-entire-subreddit-2007scape//
@@ -20,59 +22,6 @@ import calendar
 
 PUSHSHIFT_REDDIT_URL = "http://api.pushshift.io/reddit"
 
-def increment_time(epoch_time, add_day = 0, add_hour = 0, add_min = 0, add_sec = 0):
-
-    epoch_time_add = epoch_time + \
-                     add_day*24*60*60 + \
-                     add_hour*60*60 + \
-                     add_min*60 + \
-                     add_sec
-
-    return epoch_time_add
-
-
-def epoch_to_gmt(epoch_time, add_day = 0, add_sec = 0 ):
-
-    epoch_time = epoch_time + add_day*24*60*60 + add_sec
-
-    gmt_date = time.strftime('%d-%m-%Y', time.gmtime(epoch_time))
-
-    return gmt_date
-
-def gmt_to_epoch(gmt_date, hour = 0, min = 0, sec = 0, add_day = 0, add_sec = 0 ):
-    # Convert time in GMT to epoch time.
-
-    gmt_datetime = gmt_date + " " + str(hour) + ":" + str(min)  + ":" + str(sec) 
-
-    epoch_time = calendar.timegm(time.strptime(gmt_datetime, '%d-%m-%Y %H:%M:%S'))
-
-    add_day_sec = add_day*24*60*60 + add_sec
-
-    return epoch_time + add_day_sec
-
-def exist_date(begin_date):
-    # Checks if datafile already exists
-
-    file_list = os.listdir("data\comments_by_date")
-    
-    # Strip JSON
-    files = [item.split('.')[0] for item in file_list]
-
-    # Calculate days between input date and today.
-    sdate = datetime.datetime.strptime(begin_date, "%d-%m-%Y")
-    edate = datetime.datetime.now()  
-
-    delta = edate - sdate       # as timedelta
-
-    delta_days = []
-    for i in range(delta.days + 1):
-        day = sdate + datetime.timedelta(days=i)
-        delta_days.append(day.strftime("%d-%m-%Y"))
-
-    # Compare intersection between files that already exist and the dates we want
-    days_exist = list(set(delta_days).intersection(set(files)))
-
-    return days_exist
 
 def fetchObjects(**kwargs):
     # Default paramaters for API query
@@ -80,7 +29,7 @@ def fetchObjects(**kwargs):
         "sort_type":"created_utc",
         "sort":"asc", # desc gives news first
         "size":100, # apperantly the max size has been limited to 100 past year
-        "fields": ["created_utc","id", "body", "subreddit", "score"] 
+        "fields": ["created_utc","id"] #, "body", "subreddit", "score"] 
         }
 
     # Add additional paramters based on function arguments
@@ -115,36 +64,31 @@ def extract_reddit_data(**kwargs):
     t_epoch = time.time()
     # 1 week  back. Right now this gives two weeks for some reason
     oldest_created_utc = 1611442800 #  23 January 2021 23:00:00'
-    oldest_created_utc_date = epoch_to_gmt(oldest_created_utc)
+    oldest_created_utc_date = util.epoch_to_gmt(oldest_created_utc)
 
     print(oldest_created_utc_date)
 
-    days_exist = exist_date(oldest_created_utc_date)
+    days_exist = util.exist_date(oldest_created_utc_date)
 
     # Create new start time if date 
     while oldest_created_utc_date in days_exist:
-         oldest_created_utc = increment_time(oldest_created_utc,1,0,0,0)
-         oldest_created_utc_date = epoch_to_gmt(oldest_created_utc)
+         oldest_created_utc = util.increment_time(oldest_created_utc,1,0,0,0)
+         oldest_created_utc_date = util.epoch_to_gmt(oldest_created_utc)
 
 
-
-        
-
-    # Don'tknow what this is
     max_id = 0
 
     # Open a file for JSON output
     file = open(f"data/comments_by_date/{oldest_created_utc_date}.json","a")
 
     # While loop for recursive function
-    #while 1:
     while 1:
         nothing_processed = True
         # Call the recursive function. Because of sorted in other function date
         # is oldest to newest
         objects = fetchObjects(**kwargs,after=oldest_created_utc)
         
-        # Loop the returned data (max 100), ordered by date (old to new)
+        # Loop the returned data (max 100), ordered by date (old to new) 
         for object in objects:
             id = int(object['id'],36)
 
@@ -161,8 +105,8 @@ def extract_reddit_data(**kwargs):
 
 
                     # Convert Epoch time to human readable date
-                    oldest_created_utc_date = epoch_to_gmt(oldest_created_utc)
-                    created_utc_date        = epoch_to_gmt(created_utc)
+                    oldest_created_utc_date = util.epoch_to_gmt(oldest_created_utc)
+                    created_utc_date        = util.epoch_to_gmt(created_utc)
                     
                         
                     # Check if date of new data has passed midnight.
@@ -191,6 +135,12 @@ def extract_reddit_data(**kwargs):
 
         # Sleep a little before the next recursive function call
         time.sleep(.5)
+
+
+
+#------------------------------------------------------------------------------
+# RUN PROGRAM FROM HERE
+#------------------------------------------------------------------------------
 
 # Start program by calling function with:
 # 1) Subreddit specified

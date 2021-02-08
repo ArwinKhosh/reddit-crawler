@@ -1,3 +1,5 @@
+''' Just small test scripts '''
+
 import os
 
 # File list in specified folder

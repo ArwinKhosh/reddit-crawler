@@ -40,7 +40,7 @@ headers = {
 
 def get_post_url():
     #while after != None:
-    # API limit to 100 post per api call. Default 25.
+    # API limit to 100 post per api call
     base_url = 'https://www.reddit.com/r/europe/top/.json?limit=5'
     response = requests.get(base_url, headers=headers)
 

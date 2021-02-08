@@ -1,3 +1,7 @@
 *.ini
 *.vscode
 *.json
+
+
+
+__pycache__/
