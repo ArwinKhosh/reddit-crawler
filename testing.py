@@ -72,9 +72,9 @@ from common import util
 PUSHSHIFT_REDDIT_URL = "http://api.pushshift.io/reddit"
 
 def save_csv(r):
-    csv_columns = ['created_utc', 'id']
+    csv_columns = ['author','body','created_utc', 'id','score','subreddit']
     # files_exist = util.exist_date(oldest_created_utc_date)
-    with open('output.csv', 'a', newline="") as csv_file:
+    with open('output.csv', 'a', newline="", encoding='utf-8')  as csv_file:
         csv_writer = csv.DictWriter(csv_file, csv_columns)
         csv_writer.writeheader()
         for item in r:
@@ -119,6 +119,7 @@ def fetchObjects(**kwargs):
         response = r.json()
         data = response['data']
         sorted_data_by_id = sorted(data, key=lambda x: int(x['id'],36)) # this default to asc order. So oldest post first
+        save_csv(sorted_data_by_id)
 
         return sorted_data_by_id
     if r.status_code == 404:
@@ -140,11 +141,21 @@ def extract_reddit_data(**kwargs):
          oldest_created_utc = util.increment_time(oldest_created_utc,1,0,0,0)
          oldest_created_utc_date = util.epoch_to_gmt(oldest_created_utc)
 
+    def save_csv(r):
+    csv_columns = ['author','body','created_utc', 'id','score','subreddit']
+    # files_exist = util.exist_date(oldest_created_utc_date)
+    with open('output.csv', 'a', newline="", encoding='utf-8')  as csv_file:
+        csv_writer = csv.DictWriter(csv_file, csv_columns)
+        csv_writer.writeheader()
+        for item in r:
+            csv_writer.writerow(item)
+
+
 
     max_id = 0
 
     # Open a file for JSON output
-    file = open(f"data/comments_by_date/{oldest_created_utc_date}.json","a")
+    file = open('output.csv', 'a', newline="", encoding='utf-8')
 
     # While loop for recursive function
     while 1:
@@ -213,7 +224,7 @@ def extract_reddit_data(**kwargs):
 # Start program by calling function with:
 # 1) Subreddit specified
 # 2) The type of data required (comment or submission)
-extract_reddit_data(subreddit="europe",type="comment")
+extract_reddit_data(subreddit="wallstreetbets",type="comment")
 
 #print(gmt_to_epoch("28-01-2021", 0, 0, 0, 1, -1))
 
