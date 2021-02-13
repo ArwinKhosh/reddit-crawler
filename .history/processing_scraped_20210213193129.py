@@ -67,6 +67,7 @@ filtered_words = [k for k in word_list if k not in stop_word_set]
 counter_obj = Counter(filtered_words)
 count = counter_obj.most_common(len(counter_obj))
 
+print('smth')
 
 #make a dataframe out of it
 df  = pd.DataFrame(count, columns = ['words',timestamp])

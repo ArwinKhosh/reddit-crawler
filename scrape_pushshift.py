@@ -32,7 +32,7 @@ def fetchObjects(**kwargs):
         "fields": ["created_utc","id"] #, "body", "subreddit", "score"] 
         }
 
-    # Add additional paramters based on function arguments
+    # Add additional parameters based on function arguments
     for key,value in kwargs.items():
         params[key] = value
 
@@ -57,7 +57,7 @@ def fetchObjects(**kwargs):
         print('404')
 
 def extract_reddit_data(**kwargs):
-    # Speficify the start timestamp
+    # Specify the start timestamp
 
     t_epoch = time.time()
     # 1 week  back. Right now this gives two weeks for some reason
