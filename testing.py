@@ -72,10 +72,13 @@ from common import util
 PUSHSHIFT_REDDIT_URL = "http://api.pushshift.io/reddit"
 
 def save_csv(r):
-    with open('output.csv', 'a') as csv_file:
-        csv_writer = csv.writer(csv_file,)
+    csv_columns = ['created_utc', 'id']
+    # files_exist = util.exist_date(oldest_created_utc_date)
+    with open('output.csv', 'a', newline="") as csv_file:
+        csv_writer = csv.DictWriter(csv_file, csv_columns)
+        csv_writer.writeheader()
         for item in r:
-            csv_writer.writerow(r)
+            csv_writer.writerow(item)
 
 
 
@@ -90,8 +93,8 @@ def fetchObjects(**kwargs):
     params = {
         "sort_type":"created_utc",
         "sort":"asc", # desc gives news first
-        "size":1, # apperantly the max size has been limited to 100 past year
-        "unique": ["created_utc","id"] #, "body", "subreddit", "score"] 
+        "size":100, # apperantly the max size has been limited to 100 past year
+        "fields": ["created_utc","id", "body", "subreddit", "score","author"] 
         }
 
     # Add additional paramters based on function arguments
@@ -113,10 +116,10 @@ def fetchObjects(**kwargs):
     # Check the status code, if successful, process the data. 200 OK, 404 Not found.
     # Docs: https://www.w3schools.com/python/ref_requests_response.asp
     if r.status_code == 200:
-        response = json.loads(r.text)
+        response = r.json()
         data = response['data']
         sorted_data_by_id = sorted(data, key=lambda x: int(x['id'],36)) # this default to asc order. So oldest post first
-        save_csv(sorted_data_by_id)
+
         return sorted_data_by_id
     if r.status_code == 404:
         print('404')

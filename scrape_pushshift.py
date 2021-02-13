@@ -29,7 +29,7 @@ def fetchObjects(**kwargs):
         "sort_type":"created_utc",
         "sort":"asc", # desc gives news first
         "size":100, # apperantly the max size has been limited to 100 past year
-        "fields": ["created_utc","id"] #, "body", "subreddit", "score"] 
+        "fields": ["created_utc","id"] #, "body", "subreddit", "score", "author"] 
         }
 
     # Add additional parameters based on function arguments
