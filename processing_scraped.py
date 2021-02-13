@@ -34,7 +34,7 @@ words_file = 'words_dictionary.json'
 with open(words_file) as f:
   words = json.load(f)
 
-
+#something
 
 filtered_words = [k for k in word_list if k not in stop_word_set]
 
