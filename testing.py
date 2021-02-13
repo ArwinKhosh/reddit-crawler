@@ -1,8 +1,57 @@
+''' Just small test scripts '''
+
+# import os
+
+# # File list in specified folder
+# file_list = os.listdir("data")
+
+# # Strip JSON extension
+# for file in file_list:
+#     print(file.split('.')[0])
+
+
+#  file = open("submissions.json","a")
+
+#  json.dumps(object,sort_keys=True,ensure_ascii=True),file=file
+
+
+
+
+ #---------------------------------------------------
+
+ 
+
+# elif created_utc_date in days_exist:
+#     file.close() 
+
+#     oldest_created_utc_date = epoch_to_gmt(oldest_created_utc,1)
+#     while oldest_created_utc_date not in days_exist:
+#         file = open(f"data/comments_by_date/{oldest_created_utc_date}.json","a")
+#         oldest_created_utc = gmt_to_epoch(oldest_created_utc_date)
+#         if created_utc > oldest_created_utc:
+#             file.close() 
+
+#     oldest_created_utc = gmt_to_epoch(epoch_to_gmt(oldest_created_utc,1))
+#     break
+
+
+# Try loading Json file
+ #---------------------------------------------------
+# import json
+
+# with open("C:\\Users\\arwin\\Documents\\Invistering\\coding\\reddit-crawler\\data\comments_by_date\\2021-02-08.json") as file_open:
+#     data = json.load(file_open)
+
+
+
+
+ #---------------------------------------------------
 import requests
 import json
 import time
+import pandas as pd
+import csv
 
-# Utilityy functions
 from common import util
 
 
@@ -22,14 +71,27 @@ from common import util
 
 PUSHSHIFT_REDDIT_URL = "http://api.pushshift.io/reddit"
 
+def save_csv(r):
+    with open('output.csv', 'a') as csv_file:
+        csv_writer = csv.writer(csv_file,)
+        for item in r:
+            csv_writer.writerow(r)
+
+
+
+    # with open('output.csv', 'a') as f:
+    #     for item in r:
+    #         f.write(json.dumps(item))
+
+
 
 def fetchObjects(**kwargs):
     # Default paramaters for API query
     params = {
         "sort_type":"created_utc",
         "sort":"asc", # desc gives news first
-        "size":100, # apperantly the max size has been limited to 100 past year
-        "fields": ["created_utc","id"] #, "body", "subreddit", "score"] 
+        "size":1, # apperantly the max size has been limited to 100 past year
+        "unique": ["created_utc","id"] #, "body", "subreddit", "score"] 
         }
 
     # Add additional paramters based on function arguments
@@ -42,16 +104,19 @@ def fetchObjects(**kwargs):
     type = "comment"
     if 'type' in kwargs and kwargs['type'].lower() == "submission":
         type = "submission"
-    
+
     # Perform an API request
     r = requests.get(PUSHSHIFT_REDDIT_URL + "/" + type + "/search/", params=params, timeout=30)
+
+
 
     # Check the status code, if successful, process the data. 200 OK, 404 Not found.
     # Docs: https://www.w3schools.com/python/ref_requests_response.asp
     if r.status_code == 200:
-        response = r.json()
+        response = json.loads(r.text)
         data = response['data']
         sorted_data_by_id = sorted(data, key=lambda x: int(x['id'],36)) # this default to asc order. So oldest post first
+        save_csv(sorted_data_by_id)
         return sorted_data_by_id
     if r.status_code == 404:
         print('404')
@@ -124,7 +189,7 @@ def extract_reddit_data(**kwargs):
                     oldest_created_utc = created_utc       
                 
                 # Output JSON data to the opened file.
-                print(json.dumps(object,sort_keys=True,ensure_ascii=True),file=file)
+                json.dump(object, file, sort_keys=True,ensure_ascii=True, indent=4)
 
         
         # Exit if nothing happened.
@@ -148,4 +213,5 @@ def extract_reddit_data(**kwargs):
 extract_reddit_data(subreddit="europe",type="comment")
 
 #print(gmt_to_epoch("28-01-2021", 0, 0, 0, 1, -1))
+
 
