@@ -1,7 +1,8 @@
 import requests
-import json
 import time
 import csv
+
+
 
 # Utilityy functions
 from common import util
@@ -57,13 +58,10 @@ def fetchObjects(**kwargs):
         print('404')
 
 def extract_reddit_data(**kwargs):
-    # Specify the start timestamp
 
-    t_epoch = time.time()
     # 1 week  back. Right now this gives two weeks for some reason
     oldest_created_utc = 1612130836 #  31 January 2021 22:07:00'
     oldest_created_utc_date = util.epoch_to_gmt(oldest_created_utc)
-    csv_columns = ['author','body','created_utc', 'id','score','subreddit']
 
     days_exist = util.exist_date(oldest_created_utc_date)
 
@@ -73,72 +71,58 @@ def extract_reddit_data(**kwargs):
          oldest_created_utc_date = util.epoch_to_gmt(oldest_created_utc)
 
 
-    max_id = 0
+
+    # Get current time. 
+    date_time = util.epoch_to_gmt(time.time(), format='datetime')
 
     # Open a file for CSV output
-    file = open(f"data/comments_by_date/{oldest_created_utc_date}.csv", 'a', newline="", encoding='utf-8')
-    csv_writer = csv.DictWriter(file, csv_columns)
-    csv_writer.writeheader()
-    # While loop for recursive function
-    while 1:
-        nothing_processed = True
-        # Call the recursive function. Because of sorted in other function date
-        # is oldest to newest
-        objects = fetchObjects(**kwargs,after=oldest_created_utc)
+    with open(f"data/comments_by_date/{date_time}.csv", 'a', newline="", encoding='utf-8') as csvfile:
+        csv_columns = ['author','body','created_utc', 'id','score','subreddit'] 
+        csv_writer = csv.DictWriter(csvfile, csv_columns)
+        csv_writer.writeheader()
 
-        # Print API query time and open file
-        print('Retriev data from after: ' + util.epoch_to_gmt(oldest_created_utc,format='datetime') \
-             + '\tOpen file: ' + file.name + '\t Comments returned: ' + str(len(objects)))
-        
-        # Loop the returned data (max 100), ordered by date (old to new) 
-        for object in objects:
-            id = int(object['id'],36)
+        max_id = 0
+    
+        # While loop for recursive function
+        while 1:
+            nothing_processed = True
+            # Call the recursive function. Because of sorted in other function date
+            # is oldest to newest
+            objects = fetchObjects(**kwargs,after=oldest_created_utc)
 
-            if id > max_id:
-                nothing_processed = False
-                created_utc = object['created_utc']
-                max_id = id
+            # Print API query time and open file
+            print('Retriev data from after: ' + util.epoch_to_gmt(oldest_created_utc,format='datetime') \
+                + '\tOpen file: ' + csvfile.name + '\tComments returned: ' + str(len(objects)))
+            
+            # Loop the returned data (max 100), ordered by date (old to new) 
+            for object in objects:
+                id = int(object['id'],36)
 
+                if id > max_id:
+                    nothing_processed = False
+                    created_utc = object['created_utc']
+                    max_id = id
 
-                # This line is confusing. What if two posts have same timestamp? 
-                # Maybe doesn't matter. THey are being saved by ID anyways.
-                # This is really just set odlest time and close/open new file. 
-                if created_utc > oldest_created_utc:
-
-
-                    # Convert Epoch time to human readable date
-                    oldest_created_utc_date = util.epoch_to_gmt(oldest_created_utc)
-                    created_utc_date        = util.epoch_to_gmt(created_utc)
-                    
+                    # This line is confusing. What if two posts have same timestamp? 
+                    # Maybe doesn't matter. THey are being saved by ID anyways.
+                    # This is really just set odlest time and close/open new file. 
+                    if created_utc > oldest_created_utc:
                         
-                    # Check if date of new data has passed midnight.
-                    # And that new date isn't already saved.  
-                    # If yes, create new file with data in name. 
-                    if created_utc_date != oldest_created_utc_date:   
-
-                        if created_utc_date not in days_exist:
-                            file.close()
-                            file = open(f"data/comments_by_date/{created_utc_date}.csv","a",newline="", encoding='utf-8')
-                            csv_writer = csv.DictWriter(file, csv_columns)
-                            csv_writer.writeheader()
-
+                        # Necessary to request newer comments
+                        oldest_created_utc = created_utc       
                     
+                    # Save JSON (dictionary) as CSV. No need to flatten. 
+                    csv_writer.writerow(object)
+            
+            # Exit if nothing happened.
+            if nothing_processed: return
+            
+            # The newest time of the returned results will for the next request
+            # be used as the input for request. 
+            oldest_created_utc -= 1
 
-                    # Necessary to request newer comments
-                    oldest_created_utc = created_utc       
-                
-                # Save JSON (dictionary) as CSV. No need to flatten. 
-                csv_writer.writerow(object)
-
-        
-        # Exit if nothing happened.
-        if nothing_processed: return
-        # The newest time of the returned results will for the next request
-        # be used as the input for request. 
-        # oldest_created_utc -= 1
-
-        # Sleep a little before the next recursive function call
-        time.sleep(.5)
+            # Sleep a little before the next recursive function call
+            time.sleep(.5)
 
 
 
@@ -149,7 +133,7 @@ def extract_reddit_data(**kwargs):
 # Start program by calling function with:
 # 1) Subreddit specified
 # 2) The type of data required (comment or submission)
-extract_reddit_data(subreddit="wallstreetbets",type="comment")
+extract_reddit_data(subreddit="europe",type="comment")
 
 #print(gmt_to_epoch("28-01-2021", 0, 0, 0, 1, -1))
 
