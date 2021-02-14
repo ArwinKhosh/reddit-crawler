@@ -49,7 +49,6 @@
 import requests
 import json
 import time
-import pandas as pd
 import csv
 
 from common import util
@@ -70,22 +69,6 @@ from common import util
 
 
 PUSHSHIFT_REDDIT_URL = "http://api.pushshift.io/reddit"
-
-def save_csv(r):
-    csv_columns = ['author','body','created_utc', 'id','score','subreddit']
-    # files_exist = util.exist_date(oldest_created_utc_date)
-    with open('output.csv', 'a', newline="", encoding='utf-8')  as csv_file:
-        csv_writer = csv.DictWriter(csv_file, csv_columns)
-        csv_writer.writeheader()
-        for item in r:
-            csv_writer.writerow(item)
-
-
-
-    # with open('output.csv', 'a') as f:
-    #     for item in r:
-    #         f.write(json.dumps(item))
-
 
 
 def fetchObjects(**kwargs):
@@ -111,16 +94,12 @@ def fetchObjects(**kwargs):
     # Perform an API request
     r = requests.get(PUSHSHIFT_REDDIT_URL + "/" + type + "/search/", params=params, timeout=30)
 
-
-
     # Check the status code, if successful, process the data. 200 OK, 404 Not found.
     # Docs: https://www.w3schools.com/python/ref_requests_response.asp
     if r.status_code == 200:
         response = r.json()
         data = response['data']
         sorted_data_by_id = sorted(data, key=lambda x: int(x['id'],36)) # this default to asc order. So oldest post first
-        save_csv(sorted_data_by_id)
-
         return sorted_data_by_id
     if r.status_code == 404:
         print('404')
@@ -130,9 +109,10 @@ def extract_reddit_data(**kwargs):
 
     t_epoch = time.time()
     # 1 week  back. Right now this gives two weeks for some reason
-    oldest_created_utc = 1612130836 #  31 January 2021 22:07:00'
+    oldest_created_utc = 1612134836 #  31 January 2021 22:07:00'
     oldest_created_utc_date = util.epoch_to_gmt(oldest_created_utc)
 
+    csv_columns = ['author','body','created_utc', 'id','score','subreddit']
 
     days_exist = util.exist_date(oldest_created_utc_date)
 
@@ -141,21 +121,13 @@ def extract_reddit_data(**kwargs):
          oldest_created_utc = util.increment_time(oldest_created_utc,1,0,0,0)
          oldest_created_utc_date = util.epoch_to_gmt(oldest_created_utc)
 
-    def save_csv(r):
-    csv_columns = ['author','body','created_utc', 'id','score','subreddit']
-    # files_exist = util.exist_date(oldest_created_utc_date)
-    with open('output.csv', 'a', newline="", encoding='utf-8')  as csv_file:
-        csv_writer = csv.DictWriter(csv_file, csv_columns)
-        csv_writer.writeheader()
-        for item in r:
-            csv_writer.writerow(item)
-
-
 
     max_id = 0
 
     # Open a file for JSON output
-    file = open('output.csv', 'a', newline="", encoding='utf-8')
+    file = open(f"data/comments_by_date/{oldest_created_utc_date}.csv", 'a', newline="", encoding='utf-8')
+    csv_writer = csv.DictWriter(file, csv_columns)
+    csv_writer.writeheader()
 
     # While loop for recursive function
     while 1:
@@ -165,7 +137,8 @@ def extract_reddit_data(**kwargs):
         objects = fetchObjects(**kwargs,after=oldest_created_utc)
 
         # Print API query time and open file
-        print('Retriev data from after: ' + util.epoch_to_gmt(oldest_created_utc,format='datetime') + '\tOpen file: ' + file.name)
+        print('Retriev data from after: ' + util.epoch_to_gmt(oldest_created_utc,format='datetime') \
+             + '\tOpen file: ' + file.name + '\t Comments returned: ' + str(len(objects)))
         
         # Loop the returned data (max 100), ordered by date (old to new) 
         for object in objects:
@@ -195,15 +168,17 @@ def extract_reddit_data(**kwargs):
 
                         if created_utc_date not in days_exist:
                             file.close()
-                            file = open(f"data/comments_by_date/{created_utc_date}.json","a")
+                            file = open(f"data/comments_by_date/{created_utc_date}.csv","a",newline="", encoding='utf-8')
+                            csv_writer = csv.DictWriter(file, csv_columns)
+                            csv_writer.writeheader()
 
                     
 
                     # Necessary to request newer comments
                     oldest_created_utc = created_utc       
                 
-                # Output JSON data to the opened file.
-                json.dump(object, file, sort_keys=True,ensure_ascii=True, indent=4)
+                # Save JSON (dictionary) as CSV. No need to flatten. 
+                csv_writer.writerow(object)
 
         
         # Exit if nothing happened.

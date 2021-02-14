@@ -1,10 +1,10 @@
 import requests
 import json
 import time
+import csv
 
 # Utilityy functions
 from common import util
-
 
 
 # TODO:
@@ -29,7 +29,7 @@ def fetchObjects(**kwargs):
         "sort_type":"created_utc",
         "sort":"asc", # desc gives news first
         "size":100, # apperantly the max size has been limited to 100 past year
-        "fields": ["created_utc","id"] #, "body", "subreddit", "score", "author"] 
+        "fields": ["created_utc","id", "body", "subreddit", "score","author"] 
         }
 
     # Add additional parameters based on function arguments
@@ -63,7 +63,7 @@ def extract_reddit_data(**kwargs):
     # 1 week  back. Right now this gives two weeks for some reason
     oldest_created_utc = 1612130836 #  31 January 2021 22:07:00'
     oldest_created_utc_date = util.epoch_to_gmt(oldest_created_utc)
-
+    csv_columns = ['author','body','created_utc', 'id','score','subreddit']
 
     days_exist = util.exist_date(oldest_created_utc_date)
 
@@ -75,9 +75,10 @@ def extract_reddit_data(**kwargs):
 
     max_id = 0
 
-    # Open a file for JSON output
-    file = open(f"data/comments_by_date/{oldest_created_utc_date}.json","a")
-
+    # Open a file for CSV output
+    file = open(f"data/comments_by_date/{oldest_created_utc_date}.csv", 'a', newline="", encoding='utf-8')
+    csv_writer = csv.DictWriter(file, csv_columns)
+    csv_writer.writeheader()
     # While loop for recursive function
     while 1:
         nothing_processed = True
@@ -86,7 +87,8 @@ def extract_reddit_data(**kwargs):
         objects = fetchObjects(**kwargs,after=oldest_created_utc)
 
         # Print API query time and open file
-        print('Retriev data from after: ' + util.epoch_to_gmt(oldest_created_utc,format='datetime') + '\tOpen file: ' + file.name)
+        print('Retriev data from after: ' + util.epoch_to_gmt(oldest_created_utc,format='datetime') \
+             + '\tOpen file: ' + file.name + '\t Comments returned: ' + str(len(objects)))
         
         # Loop the returned data (max 100), ordered by date (old to new) 
         for object in objects:
@@ -116,15 +118,17 @@ def extract_reddit_data(**kwargs):
 
                         if created_utc_date not in days_exist:
                             file.close()
-                            file = open(f"data/comments_by_date/{created_utc_date}.json","a")
+                            file = open(f"data/comments_by_date/{created_utc_date}.csv","a",newline="", encoding='utf-8')
+                            csv_writer = csv.DictWriter(file, csv_columns)
+                            csv_writer.writeheader()
 
                     
 
                     # Necessary to request newer comments
                     oldest_created_utc = created_utc       
                 
-                # Output JSON data to the opened file.
-                print(json.dumps(object,sort_keys=True,ensure_ascii=True),file=file)
+                # Save JSON (dictionary) as CSV. No need to flatten. 
+                csv_writer.writerow(object)
 
         
         # Exit if nothing happened.
@@ -145,7 +149,7 @@ def extract_reddit_data(**kwargs):
 # Start program by calling function with:
 # 1) Subreddit specified
 # 2) The type of data required (comment or submission)
-extract_reddit_data(subreddit="europe",type="comment")
+extract_reddit_data(subreddit="wallstreetbets",type="comment")
 
 #print(gmt_to_epoch("28-01-2021", 0, 0, 0, 1, -1))
 
