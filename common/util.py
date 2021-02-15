@@ -46,7 +46,7 @@ def gmt_to_epoch(gmt_date, hour = 0, min = 0, sec = 0, add_day = 0, add_sec = 0 
 def exist_date(begin_date):
     # Checks if datafile already exists
 
-    file_list = os.listdir("data\comments_by_date")
+    file_list = os.listdir("data/comments_by_date")
     
     # Strip JSON
     files = [item.split('.')[0] for item in file_list]

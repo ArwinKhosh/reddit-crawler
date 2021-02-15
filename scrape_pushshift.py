@@ -60,7 +60,7 @@ def fetchObjects(**kwargs):
 def extract_reddit_data(**kwargs):
 
     # 1 week  back. Right now this gives two weeks for some reason
-    oldest_created_utc = 1612130836 #  31 January 2021 22:07:00'
+    oldest_created_utc = 1612150836 #  31 January 2021 22:07:00'
     oldest_created_utc_date = util.epoch_to_gmt(oldest_created_utc)
 
     days_exist = util.exist_date(oldest_created_utc_date)
@@ -133,7 +133,7 @@ def extract_reddit_data(**kwargs):
 # Start program by calling function with:
 # 1) Subreddit specified
 # 2) The type of data required (comment or submission)
-extract_reddit_data(subreddit="europe",type="comment")
+extract_reddit_data(subreddit="wallstreetbets",type="comment")
 
 #print(gmt_to_epoch("28-01-2021", 0, 0, 0, 1, -1))
 
