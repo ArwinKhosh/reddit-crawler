@@ -6,15 +6,30 @@ from nltk.corpus import stopwords
 from collections import Counter
 import matplotlib.pyplot as plt
 
+
+#TODO filter out the same-class stocks
+
 ##Pre - processing
 
-#download the list (just do it once)               ####
-#nltk.download('stopwords')
+sp500 = pd.read_csv('tickers/sp500',header =0, delimiter=',',index_col=False)
+nyse = pd.read_csv('tickers/nyse',header =0, delimiter=',',index_col=False)
+amex = pd.read_csv('tickers/amex',header =0, delimiter=',',index_col=False)
+nasdaq = pd.read_csv('tickers/sp500',header =0, delimiter=',',index_col=False)
 
-stopwords = stopwords.words('english')
+#put them into one
+stocks = pd.concat([sp500,nasdaq,amex,nyse], axis=1)
 
-#here to always update the list of stopwords
-#stopwords = stopwords + ....
+#filter here the ones that are like this AAC^D
+#
+
+tickers = stocks['Symbol'].tolist()
+
+#the name of the file with english language words
+words_file = 'words_dictionary.json'
+
+# read the file
+with open(words_file) as f:
+  words = json.load(f)
 
 #capitalize the list
 capital_stopwords = [k.capitalize() for k in stopwords]
@@ -26,15 +41,6 @@ stopwords = stopwords + capital_stopwords
 stop_word_set = set(stopwords)
 
 ##Processing
-
-#the name of the file. This will be changed with a list of filenames, once they are all downloaded 
-words_file = 'words_dictionary.json'
-
-# read the file
-with open(words_file) as f:
-  words = json.load(f)
-
-#something
 
 filtered_words = [k for k in word_list if k not in stop_word_set]
 
