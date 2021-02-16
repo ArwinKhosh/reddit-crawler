@@ -12,11 +12,12 @@ from common import util
 
 
 # TODO:
-# Understant why changing params to asc makes it work, desc just do one loop
-# I Fucked up! e.g a is b checks if their ids are the same. Need to go through
-# and fix where I use that. DONE! All good
-# Ids are uniqe and is just an incrementing int in base 36. but comments
-# can be posted at the same time so not good. 
+#  - Understant why changing params to asc makes it work, desc just do one loop
+#  - Ids are uniqe and is just an incrementing int in base 36. but comments
+#    can be posted at the same time so not good. 
+#  - API can sometimes return None, neen to handle that somehow, else, program
+#    will crash. If running with Task Scheduler, maybe it doesn't matter?
+#    Just create logger and message notification. 
 
 #* Docs: 
 # https://www.reddit.com/r/pushshift/comments/8m50un/how_does_pushshift_update_submissions_and/
@@ -25,7 +26,6 @@ from common import util
 
 
 PUSHSHIFT_REDDIT_URL = "http://api.pushshift.io/reddit"
-
 
 def fetchObjects(**kwargs):
     # Default paramaters for API query
