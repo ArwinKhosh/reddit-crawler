@@ -1,5 +1,5 @@
 
-KEY_LST = ('id', 'created_utc', 'author', 'score', 'body')
+KEY_LST = ('author','body','created_utc', 'id', 'score', 'subreddit')
 # Check these keys match the ones given in utils.constants
 
 DB_FILE = "db_test.db"
@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS comments (
     created_utc INTEGER NOT NULL,
     score INTEGER NOT NULL,
     author TEXT NOT NULL,
-    body TEXT NOT NULL
+    body TEXT NOT NULL,
+    subreddit TEXT NOT NULL
 );
 """
 

@@ -2,6 +2,9 @@ import requests
 import time
 import csv
 
+from common.database import SQLiteConnection
+from common.constants import DB_FILE, KEY_LST
+
 
 
 # Utilityy functions
@@ -75,6 +78,13 @@ def extract_reddit_data(**kwargs):
     # Get current time. 
     date_time = util.epoch_to_gmt(time.time(), format='datetime')
 
+    # Database connection
+    db_connector = SQLiteConnection(DB_FILE)
+    db_connector.create_tables()
+
+    #db_connector.get_latest_comment()
+
+
     # Open a file for CSV output
     with open(f"data/comments_by_date/{date_time}.csv", 'a', newline="", encoding='utf-8') as csvfile:
         csv_columns = ['author','body','created_utc', 'id','score','subreddit'] 
@@ -90,10 +100,14 @@ def extract_reddit_data(**kwargs):
             # is oldest to newest
             objects = fetchObjects(**kwargs,after=oldest_created_utc)
 
+
             # Print API query time and open file
             print('Retriev data from after: ' + util.epoch_to_gmt(oldest_created_utc,format='datetime') \
                 + '\tOpen file: ' + csvfile.name + '\tComments returned: ' + str(len(objects)))
             
+            db_connector.insert_batch(objects, KEY_LST)
+
+
             # Loop the returned data (max 100), ordered by date (old to new) 
             for object in objects:
                 id = int(object['id'],36)
@@ -123,7 +137,6 @@ def extract_reddit_data(**kwargs):
 
             # Sleep a little before the next recursive function call
             time.sleep(.5)
-
 
 
 #------------------------------------------------------------------------------

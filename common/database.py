@@ -35,13 +35,13 @@ class SQLiteConnection:
     def insert_batch(self, batch, key_tpl):
         """
         Stores batch to database
-        :param batch: Batch of submissions
+        :param batch: Batch of comments
         :param key_tpl: ordered tuple of keys that are in the batch and should be stored
         :return:
         """
         c = self.conn.cursor()
 
-        c.executemany(f"INSERT INTO submissions {str(key_tpl)} "
-                      f"VALUES ({','.join(['?'] * len(key_tpl))});", batch)
+        c.executemany(f"INSERT INTO comments {str(key_tpl)} "
+                      f"VALUES (:author, :score, :subreddit, :body, :created_utc, :id );", batch)
         c.close()
         self.conn.commit()

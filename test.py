@@ -1,9 +1,15 @@
-from common.database import SQLiteConnection
-from common.constants import DB_FILE
+import sqlite3
 
-db_connector = SQLiteConnection(DB_FILE)
+connector = sqlite3.connect(":memory:")
+cursor = connector.cursor()
 
-db_connector.create_tables()
 
-print(db_connector.get_latest_comment())
-
+dict_data = {
+ 'filename' : 'test.txt',
+ 'size' : '200'
+}
+table_name = 'test_table'
+attrib_names = ", ".join(dict_data.keys())
+attrib_values = ", ".join("?" * len(dict_data.keys()))
+sql = f"INSERT INTO {table_name} ({attrib_names}) VALUES ({attrib_values})"
+cursor.execute(sql, list(dict_data.values()))
