@@ -6,23 +6,30 @@ from nltk.corpus import stopwords
 from collections import Counter
 import matplotlib.pyplot as plt
 
-
-#TODO filter out the same-class stocks
+#TODO check performance of list vs dictionary value lookup
 
 ##Pre - processing
 
-sp500 = pd.read_csv('tickers/sp500',header =0, delimiter=',',index_col=False)
-nyse = pd.read_csv('tickers/nyse',header =0, delimiter=',',index_col=False)
-amex = pd.read_csv('tickers/amex',header =0, delimiter=',',index_col=False)
-nasdaq = pd.read_csv('tickers/sp500',header =0, delimiter=',',index_col=False)
+sp500 = pd.read_csv('tickers/sp500.csv',header =0, delimiter=',',index_col=False)
+nyse = pd.read_csv('tickers/nyse.csv',header =0, delimiter=',',index_col=False)
+amex = pd.read_csv('tickers/amex.csv',header =0, delimiter=',',index_col=False)
+nasdaq = pd.read_csv('tickers/nasdaq.csv',header =0, delimiter=',',index_col=False)
 
-#put them into one
-stocks = pd.concat([sp500,nasdaq,amex,nyse], axis=1)
+#put them into one dataframe
+stocks = pd.DataFrame(pd.concat([sp500['Symbol'],nasdaq['Symbol'],amex['Symbol'],nyse['Symbol']], axis=0))
+stocks.reset_index(inplace=True)
 
-#filter here the ones that are like this AAC^D
-#
+#turn it into a list 
+tickers =stocks['Symbol'].tolist()
 
-tickers = stocks['Symbol'].tolist()
+#remove duplicates
+tickers = set(tickers)
+
+#filter out those who are same stock but Class A,B or C
+ss = [x for x in tickers if not "^" in x]
+
+#sort them
+tickers = sorted(ss)
 
 #the name of the file with english language words
 words_file = 'words_dictionary.json'
