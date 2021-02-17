@@ -1,15 +1,11 @@
 import requests
 import time
-import csv
 
 from common.database import SQLiteConnection
 from common.constants import DB_FILE, KEY_LST
 
-
-
 # Utilityy functions
 from common import util
-
 
 # TODO:
 #  - Understant why changing params to asc makes it work, desc just do one loop
@@ -62,9 +58,6 @@ def fetchObjects(**kwargs):
 
 def extract_reddit_data(**kwargs):
 
-    # Get current time. 
-    date_time = util.epoch_to_gmt(int(time.time()), format='datetime')
-
     # Database connection
     db_connector = SQLiteConnection(DB_FILE)
     db_connector.create_tables()
@@ -75,53 +68,30 @@ def extract_reddit_data(**kwargs):
     else:
         latest_time = latest_time_db[0]
 
-    max_id = 0
     total_fetched = 0
     
     # While loop for recursive function
     while 1:
         nothing_processed = True
-        # Call the recursive function. Because of sorted in other function date
-        # is oldest to newest
 
-
+        # Returned comments (max 100), ordered by date (old to new) 
         objects = fetchObjects(**kwargs,after=latest_time)
+        
+        if len(objects) > 0: 
+            db_connector.insert_batch(objects, KEY_LST)
+            nothing_processed = False
+            total_fetched += len(objects)
+            # Get most recent time  
+            latest_time = max([item['created_utc'] for item in objects])  
+                
+        # Exit script if nothing happened.
+        if nothing_processed: 
+            print(f'Total amount of comments fetched: {total_fetched}') 
+            return
 
-
-        # Print API query time and open file
+        # Print API query time and open file.
         print('Retriev data from after: ' + util.epoch_to_gmt(latest_time,format='datetime') \
             + '\tOpen DB: ' + DB_FILE + '\tComments returned: ' + str(len(objects)))
-
-        total_fetched += len(objects)
-        
-        db_connector.insert_batch(objects, KEY_LST)
-
-
-        # Loop the returned data (max 100), ordered by date (old to new) 
-        for object in objects:
-            id = int(object['id'],36)
-
-            if id > max_id:
-                nothing_processed = False
-                created_utc = object['created_utc']
-                max_id = id
-
-                # This line is confusing. What if two posts have same timestamp? 
-                # Maybe doesn't matter. THey are being saved by ID anyways.
-                # This is really just set odlest time and close/open new file. 
-                if created_utc > latest_time:
-                    
-                    # Necessary to request newer comments
-                    latest_time = created_utc       
-                
-        # Exit if nothing happened.
-        if nothing_processed: 
-            print(total_fetched) 
-            return
-        
-        # The newest time of the returned results will for the next request
-        # be used as the input for request. 
-        # latest_time -= 1
 
         # Sleep a little before the next recursive function call
         time.sleep(.5)

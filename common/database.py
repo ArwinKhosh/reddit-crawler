@@ -12,7 +12,7 @@ class SQLiteConnection:
 
     def read_db_into_pandas(self, limit=None):
         # Warning this is expensive on the memory
-        query = "SELECT * from submissions"
+        query = "SELECT * from comments"
         if limit is not None:
             query += f" LIMIT {limit}"
         df = pd.read_sql_query(query, self.conn)

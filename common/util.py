@@ -6,16 +6,15 @@ import datetime
 import calendar
 
 # TODO: Describe what each function does.
+#! Probably some of this custom functionality is achivable with the imported packes
 
 def increment_time(epoch_time, add_day = 0, add_hour = 0, add_min = 0, add_sec = 0):
-
 
     epoch_time_add = epoch_time + \
                      add_day*24*60*60 + \
                      add_hour*60*60 + \
                      add_min*60 + \
                      add_sec
-
     return epoch_time_add
 
 

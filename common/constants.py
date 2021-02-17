@@ -1,15 +1,8 @@
-
+# Ordered list of columns in database.
 KEY_LST = ('id','created_utc', 'score','author','body', 'subreddit')
-# Check these keys match the ones given in utils.constants
 
-DB_FILE = "db_test.db"
-
-
-# NULL
-# INTEGER
-# REAL
-# TEXT 
-# BLOB 
+# Database file
+DB_FILE = "data/comments_by_date/comments.db"
 
 # Create the table to store the submission data
 CREATE_COMMENTS_TABLE = """
