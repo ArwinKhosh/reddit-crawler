@@ -42,6 +42,6 @@ class SQLiteConnection:
         c = self.conn.cursor()
 
         c.executemany(f"INSERT INTO comments {str(key_tpl)} "
-                      f"VALUES (:author, :body, :created_utc, :id, :score, :subreddit);", batch)
+                      f"VALUES (:id, :created_utc, :score, :author, :body, :subreddit);", batch)
         c.close()
         self.conn.commit()

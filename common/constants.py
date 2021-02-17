@@ -1,5 +1,5 @@
 
-KEY_LST = ('author','body','created_utc', 'id', 'score', 'subreddit')
+KEY_LST = ('id','created_utc', 'score','author','body', 'subreddit')
 # Check these keys match the ones given in utils.constants
 
 DB_FILE = "db_test.db"

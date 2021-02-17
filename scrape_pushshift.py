@@ -62,81 +62,69 @@ def fetchObjects(**kwargs):
 
 def extract_reddit_data(**kwargs):
 
-    # 1 week  back. Right now this gives two weeks for some reason
-    oldest_created_utc = 1612130836 #  31 January 2021 22:07:00'
-    oldest_created_utc_date = util.epoch_to_gmt(oldest_created_utc)
-
-    days_exist = util.exist_date(oldest_created_utc_date)
-
-    # Create new start time if date 
-    while oldest_created_utc_date in days_exist:
-         oldest_created_utc = util.increment_time(oldest_created_utc,1,0,0,0)
-         oldest_created_utc_date = util.epoch_to_gmt(oldest_created_utc)
-
-
-
     # Get current time. 
-    date_time = util.epoch_to_gmt(time.time(), format='datetime')
+    date_time = util.epoch_to_gmt(int(time.time()), format='datetime')
 
     # Database connection
     db_connector = SQLiteConnection(DB_FILE)
     db_connector.create_tables()
+    latest_time_db = db_connector.get_latest_comment()
 
-    #db_connector.get_latest_comment()
+    if latest_time_db is None:
+        latest_time =int(time.time()) - 86400  # (1 day) Later set to X amount of time from now
+    else:
+        latest_time = latest_time_db[0]
 
-
-    # Open a file for CSV output
-    with open(f"data/comments_by_date/{date_time}.csv", 'a', newline="", encoding='utf-8') as csvfile:
-        csv_columns = ['author','body','created_utc', 'id','score','subreddit'] 
-        csv_writer = csv.DictWriter(csvfile, csv_columns)
-        csv_writer.writeheader()
-
-        max_id = 0
+    max_id = 0
+    total_fetched = 0
     
-        # While loop for recursive function
-        while 1:
-            nothing_processed = True
-            # Call the recursive function. Because of sorted in other function date
-            # is oldest to newest
-            objects = fetchObjects(**kwargs,after=oldest_created_utc)
+    # While loop for recursive function
+    while 1:
+        nothing_processed = True
+        # Call the recursive function. Because of sorted in other function date
+        # is oldest to newest
 
 
-            # Print API query time and open file
-            print('Retriev data from after: ' + util.epoch_to_gmt(oldest_created_utc,format='datetime') \
-                + '\tOpen file: ' + csvfile.name + '\tComments returned: ' + str(len(objects)))
-            
-            db_connector.insert_batch(objects, KEY_LST)
+        objects = fetchObjects(**kwargs,after=latest_time)
 
 
-            # Loop the returned data (max 100), ordered by date (old to new) 
-            for object in objects:
-                id = int(object['id'],36)
+        # Print API query time and open file
+        print('Retriev data from after: ' + util.epoch_to_gmt(latest_time,format='datetime') \
+            + '\tOpen DB: ' + DB_FILE + '\tComments returned: ' + str(len(objects)))
 
-                if id > max_id:
-                    nothing_processed = False
-                    created_utc = object['created_utc']
-                    max_id = id
+        total_fetched += len(objects)
+        
+        db_connector.insert_batch(objects, KEY_LST)
 
-                    # This line is confusing. What if two posts have same timestamp? 
-                    # Maybe doesn't matter. THey are being saved by ID anyways.
-                    # This is really just set odlest time and close/open new file. 
-                    if created_utc > oldest_created_utc:
-                        
-                        # Necessary to request newer comments
-                        oldest_created_utc = created_utc       
+
+        # Loop the returned data (max 100), ordered by date (old to new) 
+        for object in objects:
+            id = int(object['id'],36)
+
+            if id > max_id:
+                nothing_processed = False
+                created_utc = object['created_utc']
+                max_id = id
+
+                # This line is confusing. What if two posts have same timestamp? 
+                # Maybe doesn't matter. THey are being saved by ID anyways.
+                # This is really just set odlest time and close/open new file. 
+                if created_utc > latest_time:
                     
-                    # Save JSON (dictionary) as CSV. No need to flatten. 
-                    csv_writer.writerow(object)
-            
-            # Exit if nothing happened.
-            if nothing_processed: return
-            
-            # The newest time of the returned results will for the next request
-            # be used as the input for request. 
-            oldest_created_utc -= 1
+                    # Necessary to request newer comments
+                    latest_time = created_utc       
+                
+        # Exit if nothing happened.
+        if nothing_processed: 
+            print(total_fetched) 
+            return
+        
+        # The newest time of the returned results will for the next request
+        # be used as the input for request. 
+        # latest_time -= 1
 
-            # Sleep a little before the next recursive function call
-            time.sleep(.5)
+        # Sleep a little before the next recursive function call
+        time.sleep(.5)
 
 
 #------------------------------------------------------------------------------
