@@ -21,13 +21,6 @@
 
 2. Good resource on memory management in [Python and pandas](https://pythonspeed.com/memory/)
 
-3. For the first version I will do this:
-    1. Get JSON from API
-    2. Convert to CSV
-    3. save in CSV format
-    4. Usaage: keywords: chunking and indexing. Check point 2. 
-
-
 ### Data Quality
 1. Pushshift grabs comments as close to realtime as possible. So score will be always 1. I think there is a way to update the score with reddits API using comments IDs
 
