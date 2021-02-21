@@ -1,11 +1,15 @@
 <!-- Ctrl+K V for preview -->
 
-# Useful links Pushhsift
+# TODO
+1. Incorporate logger.
+2. Create more error checking throughout the chain.
+2. collect data from other subreddits (e.g stocks). Either using Task Scheduler or mulithreading.
+3. 
 
-[Creating large datasets using Pushshift](https://www.reddit.com/r/pushshift/comments/ldp9pl/creating_large_datasets_using_pushshift/)
-
-
-[All available posts and comments from /r/WallStreetBets](https://www.reddit.com/r/pushshift/comments/lfbejb/all_available_posts_and_comments_from/)
+2. Incorporate updated metadata (comment score).
+3. Setting up Task Scheduler / Cron to run script every X minutes.
+4. Making a backtester.
+5. Connect to markets API to create a trading bot (or use an existing one).
 
 
 # Ideas
@@ -23,6 +27,21 @@
 
 ### Data Quality
 1. Pushshift grabs comments as close to realtime as possible. So score will be always 1. I think there is a way to update the score with reddits API using comments IDs
+
+
+# Other Projects + resources
+## Other stock market projects
+1. [Very similar projecton on reddit, with backtesting. Using Quiverquant package in python to get WSB data](https://www.reddit.com/r/Python/comments/lmtf9z/building_an_algorithmic_trading_strategy_with/)
+2. [Webisite for most mentioned tickers + sentiment on each ticker for various social media outlets Tickers that are gaining hype and losing momentum](https://swaggystocks.com/dashboard/home)
+
+## Data Retrival Resources
+
+1. [Creating large datasets using a news Pushshift wrapper called PMAW](https://www.reddit.com/r/pushshift/comments/ldp9pl/creating_large_datasets_using_pushshift/)
+2. [Older pushhsift wrapper called PSAW](https://github.com/dmarx/psaw)
+2. [All available posts and comments from /r/WallStreetBets](https://www.reddit.com/r/pushshift/comments/lfbejb/all_available_posts_and_comments_from/)
+
+
+
 
 
 
