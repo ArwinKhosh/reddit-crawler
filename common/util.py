@@ -23,7 +23,7 @@ def epoch_to_gmt(epoch_time, add_day = 0, add_sec = 0,*,format = 'date'):
     epoch_time = epoch_time + add_day*24*60*60 + add_sec
 
     if format == 'datetime':
-        date_format = '%Y-%m-%d_%H-%M-%S'
+        date_format = '%Y-%m-%d-%H-%M-%S'
     else:
         date_format = '%Y-%m-%d'
 

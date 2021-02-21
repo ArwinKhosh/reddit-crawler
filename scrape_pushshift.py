@@ -78,6 +78,9 @@ def extract_reddit_data(**kwargs):
         objects = fetchObjects(**kwargs,after=latest_time)
         
         if len(objects) > 0: 
+            for item in objects:
+                item.update( {"created_date": util.epoch_to_gmt(item['created_utc'], format='datetime')})
+
             db_connector.insert_batch(objects, KEY_LST)
             nothing_processed = False
             total_fetched += len(objects)
