@@ -23,7 +23,7 @@ from common import util
 
 PUSHSHIFT_REDDIT_URL = "http://api.pushshift.io/reddit"
 
-def fetchObjects(**kwargs):
+def fetch_comments(**kwargs):
     # Default paramaters for API query
     params = {
         "sort_type":"created_utc",
@@ -71,21 +71,25 @@ def extract_reddit_data(**kwargs):
     total_fetched = 0
     
     # While loop for recursive function
-    while 1:
+    while True:
         nothing_processed = True
 
         # Returned comments (max 100), ordered by date (old to new) 
-        objects = fetchObjects(**kwargs,after=latest_time)
+        # Returns a list of dictionaries.
+        batch = fetch_comments(**kwargs,after=latest_time)
         
-        if len(objects) > 0: 
-            for item in objects:
-                item.update( {"created_date": util.epoch_to_gmt(item['created_utc'], format='datetime')})
+        if len(batch) > 0:
 
-            db_connector.insert_batch(objects, KEY_LST)
+            # Insert a human readable date in each comment. 
+            for comment in batch:
+                comment.update( {"created_date": util.epoch_to_gmt(comment['created_utc'], format='datetime')})
+
+            db_connector.insert_batch(batch, KEY_LST)
             nothing_processed = False
-            total_fetched += len(objects)
-            # Get most recent time  
-            latest_time = max([item['created_utc'] for item in objects])  
+            total_fetched += len(batch)
+
+            # Get most recent time.
+            latest_time = max([item['created_utc'] for item in batch])  
                 
         # Exit script if nothing happened.
         if nothing_processed: 
@@ -93,8 +97,8 @@ def extract_reddit_data(**kwargs):
             return
 
         # Print API query time and open file.
-        print('Retriev data from after: ' + util.epoch_to_gmt(latest_time,format='datetime') \
-            + '\tOpen DB: ' + DB_FILE + '\tComments returned: ' + str(len(objects)))
+        print('Retriev data after: ' + util.epoch_to_gmt(latest_time,format='datetime') \
+             + '\tComments returned: ' + str(len(batch)) + '\tTotal: ' + str(total_fetched))
 
         # Sleep a little before the next recursive function call
         time.sleep(.5)
