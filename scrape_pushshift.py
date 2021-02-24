@@ -26,9 +26,9 @@ PUSHSHIFT_REDDIT_URL = "http://api.pushshift.io/reddit"
 def fetch_comments(**kwargs):
     # Default paramaters for API query
     params = {
-        "sort_type":"created_utc",
-        "sort":"asc", # desc gives news first
-        "size":100, # apperantly the max size has been limited to 100 past year
+        "sort_type": "created_utc",
+        "sort": "asc", # desc gives news first
+        "size": 100, # apperantly the max size has been limited to 100 past year
         "fields": ["created_utc","id", "body", "subreddit", "score","author"] 
         }
 
