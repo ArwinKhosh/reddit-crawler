@@ -34,7 +34,3 @@ for line in iter_stock:
         print(stock_info)
 c.close()
 conn.commit()
-
-for line in r.iter_lines():
-    print(line.decode('utf-8'))
-    break
