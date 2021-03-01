@@ -64,7 +64,7 @@ def extract_reddit_data(**kwargs):
     latest_time_db = db_connector.get_latest_comment()
 
     if latest_time_db is None:
-        latest_time =int(time.time()) - 86400  # (1 day) Later set to X amount of time from now
+        latest_time =int(time.time()) - 3600  # (1 day) Later set to X amount of time from now
     else:
         latest_time = latest_time_db[0]
 
