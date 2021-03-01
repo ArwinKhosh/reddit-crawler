@@ -3,6 +3,7 @@ import sqlite3
 import requests
 
 from common.constants import CREATE_STOCKS_TABLE, CREATE_PRICE_TABLE, DB_FILE_MARKET
+from common.database import SQLiteMarket
 
 # Documentation:
 # https://www.alphavantage.co/documentation/#
@@ -15,40 +16,18 @@ from common.constants import CREATE_STOCKS_TABLE, CREATE_PRICE_TABLE, DB_FILE_MA
 #------------------------------------------------------------------------------
 ALPHA_VANTAGE_URL = "https://www.alphavantage.co/query?function=LISTING_STATUS&state=active&apikey=3TREVFBWJ4QDVQKK"
 
-conn = sqlite3.connect(DB_FILE_MARKET)
-conn.row_factory = sqlite3.Row
-c = conn.cursor()
-c.execute(CREATE_STOCKS_TABLE)
-c.execute(CREATE_PRICE_TABLE)
 
-
-#------------------------------------------------------------------------------
-# Get all symbols from market database.
-
-c.execute("""  SELECT symbol, company FROM stocks """)
-
-# Returns list of Row objects.
-stocks = c.fetchall()
-
-symbols = [ stock['symbol'] for stock in stocks]
-
-#------------------------------------------------------------------------------
+db_connector = SQLiteMarket(DB_FILE_MARKET)
+db_connector.create_tables()
 
 r = requests.get(ALPHA_VANTAGE_URL, timeout=30)
 
-# Skip header. 
+# Skip header. -> Generator object
 iter_stock = iter(r.iter_lines())
 next(iter_stock)
 
-for line in iter_stock:
-    # Go from binary to decoded data. Also remove uneccassary columns. 
-    stock_info = line.decode('utf-8').split(',')[:4]
-    try:
-        if stock_info != [''] and stock_info[0] not in symbols:
-            c.execute("INSERT INTO stocks (symbol, company, exchange, asset) VALUES (?, ?, ?, ?);", stock_info)
-            print(f"Inserted new stocks {stock_info[0]} {stock_info[1]}")
-    except Exception as e:
-        print(e)
-        print(stock_info)
-c.close()
-conn.commit()
+for stock in iter_stock:
+    # Go from binary to decoded data. Also remove uneccassary columns. -> List 
+    stock_info = stock.decode('utf-8').split(',')[:4]
+    db_connector.populate_stocks(stock_info)
+
