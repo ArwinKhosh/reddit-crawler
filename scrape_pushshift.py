@@ -80,10 +80,6 @@ def extract_reddit_data(**kwargs):
         
         if len(batch) > 0:
 
-            # Insert a human readable date in each comment. 
-            for comment in batch:
-                comment.update( {"created_date": util.epoch_to_gmt(comment['created_utc'], format='datetime')})
-
             db_connector.insert_batch(batch, KEY_LST)
             nothing_processed = False
             total_fetched += len(batch)
