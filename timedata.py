@@ -26,6 +26,8 @@ symbols = list(stocks_id.keys())
 
 conn = sqlite3.connect(DB_FILE_MARKET)
 c = conn.cursor()
+
+# Get data for chuncks of tickers
 symbols = symbols[0:30]
 chunk_size = 10
 chunk = 0 
@@ -43,6 +45,7 @@ while chunk < len(symbols):
 
         for idx, stock_OHLC in stock_price_symbol.iterrows():
 
+            # Remove data for tickers that were not found
             if not np.isnan(stock_OHLC['Open']):
             
                 c.execute("""INSERT INTO stock_price (stock_id, date, open, high, low, close, volume)
