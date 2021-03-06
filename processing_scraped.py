@@ -10,7 +10,7 @@ from common.util import epoch_to_gmt
 import datetime
 
 #TODO check performance of list vs dictionary value lookup
-
+#TODO put tickers as index of result df using concatenation
 ##Pre - processing
 
 #reading ticker data and words that need to be filtered
@@ -46,14 +46,10 @@ with open(words_file) as f:
 capital_stopwords = [k.capitalize() for k in stopwords]
 
 #add it to the original list
-stopwords = stopwords + capital_stopwords
+#stopwords = stopwords + capital_stopwords
 
 #turning it into a set for better performance
 stop_word_set = set(stopwords)
-
-##Processing
-
-filtered_words = [k for k in word_list if k not in stop_word_set]
 
 #reading comments 
 db_connector = SQLiteConnection(DB_FILE)
@@ -70,16 +66,35 @@ df['time'] =pd.to_datetime(df['time'],format = '%Y-%m-%d-%H-%M-%S')
 
 start = df.loc[0,'time']
 
+results_df = pd.DataFrame()
 #loop while we have not gone to the end of the dataframe
-while start<df.index[-1]:
+while start<df.loc[len(df)-1,'time']:
 
+  #slice it
   df_sliced = df[(df.time>start) & (df.time<start+ datetime.timedelta(minutes=5))]
-  start = df_sliced.loc[len(df_sliced)-1,'time']
+  
+  #transform it to a list
   text_chunk = df_sliced['body'].to_list()
+  
+  #get individual words
+  text_chunk2 = [x.split(' ') for x in text_chunk]
+  
+  #flatten
+  text_chunk = [a for x in text_chunk2 for a in x]
+
+  #filter for tickers
+  filtered_tickers = [k for k in text_chunk if k in tickers]
+
+  #simple ticker frequency
+  counter_obj = Counter(filtered_tickers)
+  count = counter_obj.most_common(len(counter_obj))
+
+  results_df[start] = count
+  
+  #keep the last time
+  start = df_sliced.loc[len(df_sliced)-1,'time']
+
+results_df.to_excel('data/freq5min.xls')
 
 
 
-
-#simple word frequency
-counter_obj = Counter(filtered_words)
-count = counter_obj.most_common(len(counter_obj))
