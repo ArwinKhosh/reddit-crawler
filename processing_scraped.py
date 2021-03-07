@@ -66,13 +66,13 @@ df['time'] =pd.to_datetime(df['time'],format = '%Y-%m-%d-%H-%M-%S')
 
 start = df.loc[0,'time']
 
-results_df = pd.DataFrame()
-#loop while we have not gone to the end of the dataframe
+check = False
 while start<df.loc[len(df)-1,'time']:
 
   #slice it
   df_sliced = df[(df.time>start) & (df.time<start+ datetime.timedelta(minutes=5))]
-  
+  df_sliced.reset_index(inplace=True)
+
   #transform it to a list
   text_chunk = df_sliced['body'].to_list()
   
@@ -85,16 +85,28 @@ while start<df.loc[len(df)-1,'time']:
   #filter for tickers
   filtered_tickers = [k for k in text_chunk if k in tickers]
 
-  #simple ticker frequency
+  #simple ticker frequency per given timeframe
   counter_obj = Counter(filtered_tickers)
   count = counter_obj.most_common(len(counter_obj))
 
-  results_df[start] = count
+  #turn the tuple into a series and rename it with the timestamp
+  a = pd.DataFrame(count).set_index(0)[1]
+  a.name = start
+
+  #if second round, then the series gets joined df
+  if check == True:
+
+    results_df = results_df.join(a)
+
+  #if the first time, series is the dataframe
+  else:
+    results_df = pd.DataFrame(a)
+    check =True
   
   #keep the last time
   start = df_sliced.loc[len(df_sliced)-1,'time']
 
+#once it's complete, turn NANs into 0s and cast to int
+results_df.fillna(0)
+results_df.astype(int)
 results_df.to_excel('data/freq5min.xls')
-
-
-
