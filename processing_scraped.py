@@ -8,9 +8,9 @@ from common.database import SQLiteConnection
 from common.constants import DB_FILE
 from common.util import epoch_to_gmt
 import datetime
+import seaborn as sns
 
 #TODO check performance of list vs dictionary value lookup
-#TODO put tickers as index of result df using concatenation
 ##Pre - processing
 
 #reading ticker data and words that need to be filtered
@@ -65,7 +65,8 @@ df['time'] = cur_time
 df['time'] =pd.to_datetime(df['time'],format = '%Y-%m-%d-%H-%M-%S')
 
 start = df.loc[0,'time']
-
+counts = 0
+################################################################################################
 check = False
 while start<df.loc[len(df)-1,'time']:
 
@@ -96,17 +97,27 @@ while start<df.loc[len(df)-1,'time']:
   #if second round, then the series gets joined df
   if check == True:
 
-    results_df = results_df.join(a)
+    #results_df = results_df.merge(a,how= 'outer')
+    results_df = results_df.join(a, how='outer')
 
   #if the first time, series is the dataframe
   else:
     results_df = pd.DataFrame(a)
     check =True
   
-  #keep the last time
+  #move the start to the end of the current sliced block
   start = df_sliced.loc[len(df_sliced)-1,'time']
 
+  counts = counts + len(df_sliced)
+
 #once it's complete, turn NANs into 0s and cast to int
-results_df.fillna(0)
+results_df = results_df.fillna(0)
 results_df.astype(int)
-results_df.to_excel('data/freq5min.xls')
+
+results_df = results_df.cumsum(axis=1)
+results_df.to_excel('results/freq5min.xls')
+
+fig = results_df.T.plot()
+fig.legend(bbox_to_anchor=[1.05, 0.05], loc='right')
+plt.show()
+plt.savefig('results/trends.jpg')
