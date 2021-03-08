@@ -2,7 +2,7 @@
 KEY_LST = ('id','created_utc', 'score','author','body', 'subreddit')
 
 # Database file
-DB_FILE = "data/comments_by_date/comments.db"
+DB_FILE = "data/comments_by_date/eur_comments.db"
 
 # Create the table to store the submission data
 CREATE_COMMENTS_TABLE = """

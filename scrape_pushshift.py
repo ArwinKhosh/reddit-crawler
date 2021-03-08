@@ -1,5 +1,7 @@
 import requests
 import time
+import logging
+import os
 
 from common.database import SQLiteConnection
 from common.constants import DB_FILE, KEY_LST
@@ -20,6 +22,25 @@ from common import util
 # https://github.com/pushshift/api  # This seems to be not up to date, but useful
 # https://www.osrsbox.com/blog/2019/03/18/watercooler-scraping-an-entire-subreddit-2007scape//
 
+# Setup Logging
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+logger =logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler = logging.FileHandler(os.path.join(dir_path,'scrape.log'))
+file_handler.setLevel(logging.INFO)
+file_handler.setFormatter(formatter)
+
+stream_handler = logging.StreamHandler()
+stream_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
+logger.addHandler(stream_handler)
+
+
+# ------------------------------------------------------------------------------
 
 PUSHSHIFT_REDDIT_URL = "http://api.pushshift.io/reddit"
 
@@ -51,10 +72,13 @@ def fetch_comments(**kwargs):
     if r.status_code == 200:
         response = r.json()
         data = response['data']
+
+        if len(data) == 0:
+            logger.info("No new data, exiting")
         sorted_data_by_id = sorted(data, key=lambda x: int(x['id'],36)) # this default to asc order. So oldest post first
         return sorted_data_by_id
     if r.status_code == 404:
-        print('404')
+        logger.error('Pushshift: 404')
 
 def extract_reddit_data(**kwargs):
 
@@ -64,7 +88,7 @@ def extract_reddit_data(**kwargs):
     latest_time_db = db_connector.get_latest_comment()
 
     if latest_time_db is None:
-        latest_time =int(time.time()) - 3600  # (1 day) Later set to X amount of time from now
+        latest_time =int(time.time()) - 10*3600  # (1 day) Later set to X amount of time from now
     else:
         latest_time = latest_time_db[0]
 
@@ -89,11 +113,11 @@ def extract_reddit_data(**kwargs):
                 
         # Exit script if nothing happened.
         if nothing_processed: 
-            print(f'Total amount of comments fetched: {total_fetched}') 
+            logger.info(f'Total amount of comments fetched: {total_fetched}') 
             return
 
         # Print API query time and open file.
-        print('Retriev data after: ' + util.epoch_to_gmt(latest_time,format='datetime') \
+        logger.info('Retriev data after: ' + util.epoch_to_gmt(latest_time,format='datetime') \
              + '\tComments returned: ' + str(len(batch)) + '\tTotal: ' + str(total_fetched))
 
         # Sleep a little before the next recursive function call
@@ -107,7 +131,7 @@ def extract_reddit_data(**kwargs):
 # Start program by calling function with:
 # 1) Subreddit specified
 # 2) The type of data required (comment or submission)
-extract_reddit_data(subreddit="wallstreetbets",type="comment")
-
+#extract_reddit_data(subreddit="wallstreetbets",type="comment")
+extract_reddit_data(subreddit="europe",type="comment")
 #print(gmt_to_epoch("28-01-2021", 0, 0, 0, 1, -1))
 
