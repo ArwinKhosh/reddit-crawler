@@ -1,8 +1,13 @@
+import os
+
 # Ordered list of columns in database.
 KEY_LST = ('id','created_utc', 'score','author','body', 'subreddit')
 
+# If file structure changes this will not work
+ROOT_DIR = os.path.dirname(os.path.dirname(__file__))
+
 # Database file
-DB_FILE = "data/comments_by_date/eur_comments.db"
+DB_FILE = os.path.join(ROOT_DIR,"data/comments_by_date/eur_comments.db")
 
 # Create the table to store the submission data
 CREATE_COMMENTS_TABLE = """
