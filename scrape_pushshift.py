@@ -1,6 +1,7 @@
+#!/usr/bin/python3
 import requests
 import time
-import logging
+import logging.config
 import os
 
 from common.database import SQLiteConnection
@@ -8,6 +9,7 @@ from common.constants import DB_FILE, KEY_LST
 
 # Utilityy functions
 from common import util
+
 
 # TODO:
 #  - Understant why changing params to asc makes it work, desc just do one loop
@@ -23,21 +25,10 @@ from common import util
 # https://www.osrsbox.com/blog/2019/03/18/watercooler-scraping-an-entire-subreddit-2007scape//
 
 # Setup Logging
-dir_path = os.path.dirname(os.path.realpath(__file__))
-
-logger =logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-file_handler = logging.FileHandler(os.path.join(dir_path,'scrape.log'))
-file_handler.setLevel(logging.INFO)
-file_handler.setFormatter(formatter)
-
-stream_handler = logging.StreamHandler()
-stream_handler.setFormatter(formatter)
-
-logger.addHandler(file_handler)
-logger.addHandler(stream_handler)
+LOG_CONF_FILE = os.path.join(os.path.dirname(__file__),'logging.conf')
+LOG_FILE = os.path.join(os.path.dirname(__file__),'scrape.log')
+logging.config.fileConfig(LOG_CONF_FILE, disable_existing_loggers=False, defaults={'logfilename': LOG_FILE})
+logger = logging.getLogger(__name__)
 
 
 # ------------------------------------------------------------------------------
