@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import os
 import logging.config
 import qrcode

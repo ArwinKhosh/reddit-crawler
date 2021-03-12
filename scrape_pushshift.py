@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 import requests
 import time
 import logging.config
@@ -26,7 +25,7 @@ from common import util
 
 # Setup Logging
 LOG_CONF_FILE = os.path.join(os.path.dirname(__file__),'logging.conf')
-LOG_FILE = os.path.join(os.path.dirname(__file__),'scrape.log')
+LOG_FILE = os.path.join(os.path.dirname(__file__.replace('\\','/')),'scrape.log')
 logging.config.fileConfig(LOG_CONF_FILE, disable_existing_loggers=False, defaults={'logfilename': LOG_FILE})
 logger = logging.getLogger(__name__)
 
