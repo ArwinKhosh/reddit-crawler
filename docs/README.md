@@ -1,16 +1,18 @@
 <!-- Ctrl+K V for preview -->
 
 # TODO
-1. Incorporate logger.
+1. Incorporate logger. (Fist version up and running!)
 2. Create more error checking throughout the chain.
 2. collect data from other subreddits (e.g stocks). Either using Task Scheduler or mulithreading.
-3. 
-
 2. Incorporate updated metadata (comment score).
-3. Setting up Task Scheduler / Cron to run script every X minutes.
+3. Setting up Task Scheduler / Cron to run script every X minutes. (In the works!)
 4. Making a backtester.
 5. Connect to markets API to create a trading bot (or use an existing one).
 
+# Important Notes
+Some things to keep in mind when setting up ubuntu environemnt.
+cron only has access to a limited amount of env variables and thus paths. be aware of this.
+I added a PATH in the cron script with root folder of reddit crawler. Not sure if this made it work or not. 
 
 # Ideas
 
